@@ -4,8 +4,17 @@
         <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Folder Include="Interfaces" />
-    </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<CodeAnalysisRuleSet>../../StyleCop/Nix.StyleCop.Analyzers.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>8</LangVersion>
+	</PropertyGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="../../StyleCop/stylecop.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Nix.StyleCop.Analyzers" Version="1.0.21-beta1" />
+	</ItemGroup>
 </Project>
