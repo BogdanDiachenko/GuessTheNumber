@@ -1,8 +1,17 @@
+using System;
+using System.Text;
+using Core.Models;
+using DAL;
+using GuessTheNumber.Configuration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 namespace GuessTheNumber
@@ -19,6 +28,33 @@ namespace GuessTheNumber
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<JwtConfig>(this.Configuration.GetSection("JwtConfig"));
+
+            services.AddAuthentication(options =>
+            {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(jwt =>
+                {
+                    var key = Encoding.ASCII.GetBytes(this.Configuration["JwtConfig:Secret"]);
+
+                    jwt.SaveToken = true;
+                    jwt.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        RequireExpirationTime = false
+                    };
+                });
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(this.Configuration["ConnectionStrings:DefaultConnection"]));
+            services.AddIdentity<ApplicationUser, ApplicationRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -39,10 +75,13 @@ namespace GuessTheNumber
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }
