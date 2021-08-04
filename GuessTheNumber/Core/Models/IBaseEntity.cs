@@ -1,9 +1,7 @@
-﻿using System;
-
-namespace Core.Models
+﻿namespace Core.Models
 {
-    public interface IBaseEntity
+    public interface IBaseEntity<T>
     {
-        Guid Id { get; set; }
+        T Id { get; set; }
     }
 }

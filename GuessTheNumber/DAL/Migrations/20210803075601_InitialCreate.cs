@@ -5,6 +5,7 @@ namespace DAL.Migrations
 {
     public partial class InitialCreate : Migration
     {
+#pragma warning disable
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -299,4 +300,5 @@ namespace DAL.Migrations
                 name: "Game");
         }
     }
+#pragma warning restore
 }

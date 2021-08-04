@@ -2,14 +2,14 @@
 
 namespace Core.Models
 {
-    public class Step : IBaseEntity
+    public class Step : BaseEntity<Guid>
     {
-        public Guid Id { get; set; }
-
         public Guid UserId { get; set; }
 
         public Guid GameId { get; set; }
 
         public int Value { get; set; }
+
+        public int StepNumber { get; set; }
     }
 }
