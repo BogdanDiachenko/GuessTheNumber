@@ -1,0 +1,11 @@
+﻿{
+	"$schema": "stylecop.schema.json",
+	"settings": {
+		"orderingRules": {
+			"usingDirectivesPlacement": "outsideNamespace"
+		},
+		"design": {
+			"maxMethodLines": 75
+		}
+	}
+}
