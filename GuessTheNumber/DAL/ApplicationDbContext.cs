@@ -1,11 +1,12 @@
 ﻿using System;
 using Core.Models;
+using Core.Models.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
+    public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -15,12 +16,31 @@ namespace DAL
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<Game>().ToTable("Games");
-            builder.Entity<ApplicationUser>().Property(x => x.Name).HasMaxLength(10);
 
-            // Customize the ASP.NET Identity model and override the defaults if needed.
-            // For example, you can rename the ASP.NET Identity table names and more.
-            // Add your customizations after calling base.OnModelCreating(builder);
+            builder
+                .Entity<ApplicationUser>()
+                .HasMany(user => user.Games)
+                .WithMany(game => game.Players)
+                .UsingEntity<UserGame>(
+                    j => j
+                        .HasOne(ug => ug.Game)
+                        .WithMany(game => game.UserGames)
+                        .HasForeignKey(ug => ug.GameId),
+                    j => j
+                        .HasOne(ug => ug.User)
+                        .WithMany(u => u.UserGames)
+                        .HasForeignKey(ug => ug.UserId),
+                    j =>
+                    {
+                        j.HasKey(ug => new { ug.GameId, ug.UserId });
+                        j.ToTable("UserGames");
+                    });
         }
+
+        public DbSet<Game> Games { get; set; }
+
+        public DbSet<Step> Steps { get; set; }
+        
+        public DbSet<UserGame> UserGames { get; set; }
     }
 }

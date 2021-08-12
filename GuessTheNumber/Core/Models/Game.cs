@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using Core.Models.Identity;
 
 namespace Core.Models
 {
     public class Game : BaseEntity<Guid>
     {
-        public bool HasFinishedSuccesfully { get; set; }
+        public bool IsFinished { get; set; }
 
         public int GuessedNumber { get; set; }
 
-        public int PlayersCount { get; set; }
-
-        public Guid? WinnerId { get; set; }
+        public Guid WinnerId { get; set; }
 
         public Guid HostId { get; set; }
 
@@ -19,8 +18,10 @@ namespace Core.Models
 
         public DateTimeOffset StartTime { get; set; }
 
-        public IEnumerable<Step> Steps { get; set; }
+        public IList<Step> Steps { get; set; }
 
-        public IEnumerable<ApplicationUser> Players { get; set; }
+        public IList<ApplicationUser> Players { get; set; }
+        
+        public IList<UserGame> UserGames { get; set; }
     }
 }

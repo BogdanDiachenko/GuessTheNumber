@@ -1,13 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
-		<CodeAnalysisRuleSet>../../StyleCop/Nix.StyleCop.Analyzers.ruleset</CodeAnalysisRuleSet>
-		<LangVersion>latest</LangVersion>
+		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,7 +16,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\DAL\DAL.csproj" />
+	  <ProjectReference Include="..\BLL.Abstraction\BLL.Abstraction.csproj" />
+	  <ProjectReference Include="..\DAL.Abstraction\DAL.Abstraction.csproj" />
 	</ItemGroup>
 
 </Project>

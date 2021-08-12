@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210812152959_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,6 +98,9 @@ namespace DAL.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<Guid?>("GameId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -137,6 +142,8 @@ namespace DAL.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GameId");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -171,21 +178,6 @@ namespace DAL.Migrations
                     b.HasIndex("GameId");
 
                     b.ToTable("Steps");
-                });
-
-            modelBuilder.Entity("Core.Models.UserGame", b =>
-                {
-                    b.Property<Guid>("GameId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("GameId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserGames");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -289,30 +281,18 @@ namespace DAL.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("Core.Models.Identity.ApplicationUser", b =>
+                {
+                    b.HasOne("Core.Models.Game", null)
+                        .WithMany("Players")
+                        .HasForeignKey("GameId");
+                });
+
             modelBuilder.Entity("Core.Models.Step", b =>
                 {
                     b.HasOne("Core.Models.Game", null)
                         .WithMany("Steps")
                         .HasForeignKey("GameId");
-                });
-
-            modelBuilder.Entity("Core.Models.UserGame", b =>
-                {
-                    b.HasOne("Core.Models.Game", "Game")
-                        .WithMany("UserGames")
-                        .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Core.Models.Identity.ApplicationUser", "User")
-                        .WithMany("UserGames")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Game");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -368,14 +348,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("Core.Models.Game", b =>
                 {
+                    b.Navigation("Players");
+
                     b.Navigation("Steps");
-
-                    b.Navigation("UserGames");
-                });
-
-            modelBuilder.Entity("Core.Models.Identity.ApplicationUser", b =>
-                {
-                    b.Navigation("UserGames");
                 });
 #pragma warning restore 612, 618
         }

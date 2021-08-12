@@ -1,7 +1,11 @@
 using System.Text;
+using BLL.Abstraction.Interfaces;
+using BLL.Services;
 using Core.Models;
+using Core.Models.Identity;
 using DAL;
-using GuessTheNumber.Configuration;
+using DAL.Abstraction.Interfaces;
+using DAL.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using HistoryRepository = DAL.Services.HistoryRepository;
+using IHistoryRepository = DAL.Abstraction.Interfaces.IHistoryRepository;
 
 namespace GuessTheNumber
 {
@@ -27,10 +33,8 @@ namespace GuessTheNumber
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<JwtConfig>(this.Configuration.GetSection("JwtConfig"));
-
             services.AddAuthentication(options =>
-            {
+                {
                     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -46,19 +50,34 @@ namespace GuessTheNumber
                         IssuerSigningKey = new SymmetricSecurityKey(key),
                         ValidateIssuer = false,
                         ValidateAudience = false,
-                        ValidateLifetime = true,
                         RequireExpirationTime = false
                     };
                 });
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(this.Configuration["ConnectionStrings:DefaultConnection"]));
-            services.AddIdentity<ApplicationUser, ApplicationRole>()
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(this.Configuration["ConnectionStrings:ReserveConnection"]));
+            services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+                {
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = false;
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+                .AddDefaultTokenProviders().AddSignInManager<SignInManager<ApplicationUser>>();
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "GuessTheNumber", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo {Title = "GuessTheNumber", Version = "v1"});
             });
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped(typeof(IGameRepository), typeof(GameRepository));
+            services.AddScoped(typeof(IHistoryRepository), typeof(HistoryRepository));
+
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IGameManager, GameManager>();
+            services.AddScoped<IHistoryService, HistoryService>();
+            services.AddScoped<ICacheService, CacheService>();
+            services.AddMemoryCache();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -74,13 +93,11 @@ namespace GuessTheNumber
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }

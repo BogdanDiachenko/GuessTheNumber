@@ -13,19 +13,13 @@ namespace GuessTheNumber
         public static void Main(string[] args)
         {
             var webHost = CreateHostBuilder(args).Build();
-            using (IServiceScope scope = webHost.Services.CreateScope())
+            using (var scope = webHost.Services.CreateScope())
             {
                 var env = scope.ServiceProvider.GetService<IWebHostEnvironment>();
-                if (env.IsDevelopment())
-                {
-                    Console.Title = "dotnet.exe - Interact";
-                }
+                if (env.IsDevelopment()) Console.Title = "dotnet.exe - Interact";
 
                 var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
-                if (context.Database.GetPendingMigrations().Any())
-                {
-                    context.Database.Migrate();
-                }
+                if (context.Database.GetPendingMigrations().Any()) context.Database.Migrate();
 
                 webHost.Run();
             }
