@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+    </PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="../../StyleCop/stylecop.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Nix.StyleCop.Analyzers" Version="1.0.21-beta1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\BLL.Abstraction\BLL.Abstraction.csproj" />
+	  <ProjectReference Include="..\DAL.Abstraction\DAL.Abstraction.csproj" />
+	</ItemGroup>
+
+</Project>
