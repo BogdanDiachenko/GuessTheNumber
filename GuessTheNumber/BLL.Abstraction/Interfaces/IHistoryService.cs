@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core.Models;
+using Core.Models.Responses;
 
 namespace BLL.Abstraction.Interfaces
 {
     public interface IHistoryService
     {
-        Task<List<Game>> GetFinishedGamesAsync();
+        Task<HistoryManagerResponse> GetAllGames();
 
-        Task<List<Game>> GetGamesPlayerWon(Guid userId);
+        Task<HistoryManagerResponse> GetGamesPlayerWon(Guid userId);
 
-        Task<List<Game>> GetGamesWithPlayer(Guid userId);
+        Task<HistoryManagerResponse> GetGamesWithPlayer(Guid userId);
     }
 }

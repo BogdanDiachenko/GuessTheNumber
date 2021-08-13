@@ -22,7 +22,7 @@ namespace GuessTheNumber.Controllers
         [HttpGet("GetAllGames")]
         public async Task<IActionResult> GetAllGames()
         {
-            var history = await this.service.GetFinishedGamesAsync();
+            var history = await this.service.GetAllGames();
 
             if (history == null)
             {

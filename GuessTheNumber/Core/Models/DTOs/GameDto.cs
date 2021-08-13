@@ -5,6 +5,8 @@ namespace Core.Models.DTOs
 {
     public class GameDto
     {
+        public DateTimeOffset StartTime { get; set; }
+
         public bool IsFinished { get; set; }
 
         public int GuessedNumber { get; set; }

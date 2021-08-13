@@ -7,7 +7,9 @@ using Core.Models;
 namespace DAL.Abstraction.Interfaces
 {
     public interface IHistoryRepository
-    {
-        Task<List<Game>> ToListAsync(Expression<Func<Game, bool>> predicate);
+    { 
+        Task<List<UserGame>> ToListAsync(Expression<Func<UserGame, bool>> predicate);
+
+        Task<List<UserGame>> ToListAsync();
     }
 }

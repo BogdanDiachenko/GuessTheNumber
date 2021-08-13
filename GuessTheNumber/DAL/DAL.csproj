@@ -20,6 +20,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="morelinq" Version="3.3.2" />
 		<PackageReference Include="Nix.StyleCop.Analyzers" Version="1.0.21-beta1" />
 	</ItemGroup>
 

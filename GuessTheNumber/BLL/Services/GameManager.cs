@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BLL.Abstraction.Interfaces;
 using Core.Models;
@@ -27,7 +28,7 @@ namespace BLL.Services
             {
                 return new GameManagerResponse()
                 {
-                    Message = "You should finish current game before.",
+                    Message = "Current game is not finished.",
                     IsSuccess = false
                 };
             }
@@ -103,7 +104,7 @@ namespace BLL.Services
                     };
                 }
 
-                winnerId = this.SelectNearestToWinUser();
+                winnerId = this.SelectNearestToWinUser(game);
             }
 
             game.IsFinished = true;
@@ -186,21 +187,12 @@ namespace BLL.Services
                 IsFinished = dto.IsFinished,
                 HostId = dto.HostId,
                 WinnerId = dto.WinnerId,
-                StartTime = DateTimeOffset.Now,
+                EndTime = DateTimeOffset.Now,
+                StartTime = dto.StartTime,
                 Steps = this.ToList(dto.Steps),
                 Players = this.repository.GetPlayersListById(dto.PlayersId).Result,
             };
         }
-
-        // private GameDto ToDto(Game entity)
-        // {
-        //     return new()
-        //     {
-        //         GuessedNumber = entity.GuessedNumber,
-        //         IsFinished = entity.IsFinished,
-        //         HostId = entity.HostId
-        //     };
-        // }
 
         private Step ToEntity(StepDto dto)
         {
@@ -228,9 +220,13 @@ namespace BLL.Services
             return true;
         }
 
-        private Guid SelectNearestToWinUser()
+        private Guid SelectNearestToWinUser(GameDto game)
         {
-            throw new NotImplementedException();
+            var closestStep = game.Steps.Aggregate((x, y) =>
+                Math.Abs(x.Value - game.GuessedNumber) <
+                Math.Abs(y.Value - game.GuessedNumber) ? x : y);
+
+            return closestStep.UserId;
         }
     }
 }

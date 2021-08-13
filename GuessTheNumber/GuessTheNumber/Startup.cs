@@ -69,7 +69,6 @@ namespace GuessTheNumber
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "GuessTheNumber", Version = "v1"});
             });
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped(typeof(IGameRepository), typeof(GameRepository));
             services.AddScoped(typeof(IHistoryRepository), typeof(HistoryRepository));
 
@@ -77,6 +76,10 @@ namespace GuessTheNumber
             services.AddScoped<IGameManager, GameManager>();
             services.AddScoped<IHistoryService, HistoryService>();
             services.AddScoped<ICacheService, CacheService>();
+            services.AddControllersWithViews()
+                .AddNewtonsoftJson(options =>
+                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+                );
             services.AddMemoryCache();
         }
 

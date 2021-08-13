@@ -12,13 +12,14 @@ namespace GuessTheNumber
     {
         public static GameDto ToDto(this ControllerBase context, GameViewModel model)
         {
-            return new GameDto()
+            return new()
             {
                 HostId = Guid.Parse(context.User.FindFirst(ClaimTypes.NameIdentifier).Value),
                 GuessedNumber = model.GuessedNumber,
                 IsFinished = false,
                 PlayersId = new List<Guid>(),
-                Steps = new List<StepDto>()
+                Steps = new List<StepDto>(),
+                StartTime = DateTimeOffset.Now
             };
         }
 
@@ -32,6 +33,17 @@ namespace GuessTheNumber
             };
         }
 
-        
+        public static IEnumerable<TSource> Distinct<TSource, TKey>
+        (this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
+        {
+            HashSet<TKey> seenKeys = new HashSet<TKey>();
+            foreach (TSource element in source)
+            {
+                if (seenKeys.Add(keySelector(element)))
+                {
+                    yield return element;
+                }
+            }
+        }
     }
 }

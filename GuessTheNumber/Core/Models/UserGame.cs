@@ -1,4 +1,5 @@
 ﻿using System;
+using Core.Models.BaseEntity;
 using Core.Models.Identity;
 
 namespace Core.Models
