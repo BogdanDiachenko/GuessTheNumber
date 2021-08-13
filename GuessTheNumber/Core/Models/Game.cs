@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Core.Models.BaseEntity;
 using Core.Models.Identity;
 
 namespace Core.Models
@@ -21,7 +22,6 @@ namespace Core.Models
         public IList<Step> Steps { get; set; }
 
         public IList<ApplicationUser> Players { get; set; }
-        
         public IList<UserGame> UserGames { get; set; }
     }
 }

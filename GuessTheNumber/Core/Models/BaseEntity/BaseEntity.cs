@@ -1,4 +1,4 @@
-﻿namespace Core.Models
+﻿namespace Core.Models.BaseEntity
 {
     public class BaseEntity<T> : IBaseEntity<T>
     {

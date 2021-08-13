@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Core.Models;
+using Core.Models.BaseEntity;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace DAL.Abstraction.Interfaces

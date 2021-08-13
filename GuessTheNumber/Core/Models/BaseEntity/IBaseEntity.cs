@@ -1,4 +1,4 @@
-﻿namespace Core.Models
+﻿namespace Core.Models.BaseEntity
 {
     public interface IBaseEntity<T>
     {

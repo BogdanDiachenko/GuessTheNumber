@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Core.Models.BaseEntity;
 using Microsoft.AspNetCore.Identity;
 
 namespace Core.Models.Identity
