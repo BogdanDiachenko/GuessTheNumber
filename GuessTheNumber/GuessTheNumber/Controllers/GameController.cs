@@ -5,7 +5,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using BLL.Abstraction.Interfaces;
 using Core.Models;
-using Core.Models.DTOs.Requests;
+using Core.Models.DTOs;
+using Core.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,65 +16,58 @@ namespace GuessTheNumber.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
     public class GameController : ControllerBase
     {
         private readonly IGameManager gameManager;
-        private readonly UserManager<ApplicationUser> userManager;
 
-        public GameController(IGameManager gameManager, UserManager<ApplicationUser> userManager)
+        public GameController(IGameManager gameManager)
         {
             this.gameManager = gameManager;
-            this.userManager = userManager;
         }
 
         [HttpPost]
         [Route("StartGame")]
-        public async Task<IActionResult> StartGame([FromBody] GameDto game)
+        public IActionResult StartGame([FromBody] GameViewModel model)
         {
-            var newGame = new Game()
+            if (!this.ModelState.IsValid)
             {
-                IsFinished = false,
-                StartTime = DateTimeOffset.Now,
-                HostId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                GuessedNumber = game.GuessedNumber,
-            };
+                return this.BadRequest("Some properties isn't valid.");
+            }
 
-            await this.gameManager.StartGameAsync(newGame);
-            return this.Ok();
+            var result = this.gameManager.StartGame(this.ToDto(model));
+            return this.Ok(result);
         }
 
         [HttpPost]
         [Route("JoinGame")]
-        public async Task<IActionResult> AddUserToGame(Guid userId)
+        public IActionResult AddUserToGame()
         {
-            // await this.gameManager.AddUserToGameAsync(
-            //     Guid.Parse(this.userManager.GetUserId(this.User)));
-            await this.gameManager.AddUserToGameAsync(userId);
-            return this.Ok();
+            var currentUserId = Guid.Parse(this.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var result = this.gameManager.AddUserToGame(currentUserId);
+            return this.Ok(result);
         }
 
         [HttpGet]
         [Route("FinishGame")]
         public async Task<IActionResult> FinishGame()
         {
-            await this.gameManager.FinishGameAsync(Guid.Empty);
-            return this.Ok();
+            var currentUserId = Guid.Parse(this.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var result = await this.gameManager.FinishGameAsync(null, currentUserId);
+            return this.Ok(result);
         }
 
         [HttpPost]
         [Route("MakeStep")]
-        public async Task<IActionResult> MakeStep([FromBody] StepDto step, Guid userId)
+        public async Task<IActionResult> MakeStep([FromBody] StepViewModel model)
         {
-            var newStep = new Step()
+            if (!this.ModelState.IsValid)
             {
-                Time = DateTimeOffset.Now,
-                Value = step.Value,
-                // UserId = Guid.Parse(this.userManager.GetUserId(this.User)),
-                UserId = Guid.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-            };
-            await this.gameManager.MakeStepAsync(newStep);
-            return this.Ok();
+                return this.BadRequest("Some properties aren't valid.");
+            }
+
+            var currentUserId = Guid.Parse(this.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var result = await this.gameManager.MakeStepAsync(this.ToDto(model), currentUserId);
+            return this.Ok(result);
         }
     }
 }

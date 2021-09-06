@@ -1,108 +1,151 @@
 ﻿using System;
-using System.Globalization;
+using System.Collections.Generic;
 using System.Linq;
-using System.Security.Permissions;
 using System.Threading.Tasks;
 using BLL.Abstraction.Interfaces;
 using Core.Models;
+using Core.Models.DTOs;
+using Core.Models.Identity;
+using Core.Models.Responses;
 using DAL.Abstraction.Interfaces;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BLL.Services
 {
     public class GameManager : IGameManager
     {
-        private readonly MemoryCacheEntryOptions cacheOptions;
-        private readonly UserManager<ApplicationUser> userManager;
         private readonly IGameRepository repository;
-        private IMemoryCache cache;
+        private readonly ICacheService cache;
 
-        public GameManager(IGameRepository repository, UserManager<ApplicationUser> userManager, IMemoryCache cache)
+
+        public GameManager(IGameRepository repository, ICacheService cache)
         {
             this.repository = repository;
-            this.userManager = userManager;
             this.cache = cache;
-            this.cacheOptions = new MemoryCacheEntryOptions()
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
-            };
-            this.cacheOptions.AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1);
         }
 
-        public Task StartGameAsync(Game newGame)
+        public Response<GameDto> StartGame(GameDto dto)
         {
-            if (this.TryGetCache("IsFinished", out bool isFinished) && !isFinished)
+            if (this.cache.IsGameActive(out GameDto game))
             {
-                return Task.CompletedTask;
-            }
-            newGame.Id = this.repository.AddAsync(newGame).Result.Entity.Id;
-            this.SetCache(newGame);
-            return this.repository.SaveChangesAsync();
-        }
-
-        public Task AddUserToGameAsync(Guid userId)
-        {
-            if (!(this.TryGetCache("IsFinished", out bool isFinished) && !isFinished))
-            {
-                return Task.CompletedTask;
+                return Response<GameDto>.Failure("Current game is not finished.");
             }
 
-            this.TryGetCache("GameId", out Guid gameId);
-            return this.repository.AddUserToGameAsync(gameId, userId);
+            this.cache.SetValue(dto);
+
+            return Response<GameDto>.Success(game);
         }
 
-        public Task FinishGameAsync(Guid winnerId)
+        public Response<GameDto> AddUserToGame(Guid userId)
         {
-            if (!(this.TryGetCache("IsFinished", out bool isFinished) && !isFinished))
+            if (!this.cache.IsGameActive(out GameDto game))
             {
-                return Task.CompletedTask;
+                return Response<GameDto>.Failure("There are no active games, you should start game before");
             }
 
-            this.TryGetCache("GameId", out Guid gameId);
-            return this.repository.FinishGameAsync(gameId, winnerId);
-        }
-
-        public Task MakeStepAsync(Step step)
-        {
-            if (!(this.TryGetCache("IsFinished", out bool isFinished) && !isFinished))
+            if (game.HostId == userId)
             {
-                return Task.CompletedTask;
+                return Response<GameDto>.Failure("You can't play the game you created");
             }
 
-            this.TryGetCache("GameId", out Guid gameId);
-            this.TryGetCache("GuessedNumber", out int guessedNumber);
-            step.GameId = gameId;
+            game.PlayersId.Add(userId);
+            this.cache.SetValue(game);
 
-            int difference = guessedNumber - step.Value;
+            return Response<GameDto>.Success(game);
+        }
 
-            switch (difference)
+        public async Task<Response<GameDto>> FinishGameAsync(Guid? winnerId, Guid userId)
+        {
+            if (!this.cache.IsGameActive(out GameDto game))
             {
-                case 0:
-                    Console.WriteLine("You've guessed the number!!!");
-                    this.cache.Set("IsFinished", true, this.cacheOptions);
-                    this.repository.MakeStepAsync(step);
-                    return this.repository.FinishGameAsync(gameId, step.UserId);
-                case < 0:
-                    Console.WriteLine("You should try number less than current!");
-                    return this.repository.MakeStepAsync(step);
-                case > 0:
-                    Console.WriteLine("You should try number bigger than current!");
-                    return this.repository.MakeStepAsync(step);
+                return Response<GameDto>.Failure("There are no active games, you should start game before");
             }
+
+            if (!this.cache.IsPlayerInGame(userId))
+            {
+                return Response<GameDto>.Failure("You should join the game first");
+            }
+
+            // Used Guid.Empty for calling method while number isn't guessed
+            if (winnerId == Guid.Empty)
+            {
+                if (!this.FinishGameVote())
+                {
+                    return Response<GameDto>.Failure("Most players decided not to finish game");
+                }
+
+                if (game.Steps.Any())
+                {
+                    winnerId = this.SelectNearestToWinUser(game);
+                }
+                else
+                {
+                    winnerId = null;
+                }
+            }
+
+            game.IsFinished = true;
+            game.WinnerId = winnerId;
+            this.cache.SetValue(game);
+
+            await this.repository.AddAsync(this.ToEntity(game));
+            this.cache.RemoveCache();
+
+            return Response<GameDto>.Success(game);
+            }
+
+        public async Task<Response<GameDto>> MakeStepAsync(StepDto dto, Guid userId)
+        {
+            if (!this.cache.IsGameActive(out GameDto game))
+            {
+                return Response<GameDto>.Failure("There are no active games, you should start game before");
+            }
+
+            if (!this.cache.IsPlayerInGame(userId))
+            {
+                return Response<GameDto>.Failure("You should join the game first");
+            }
+
+            long difference = game.GuessedNumber - dto.Value;
+
+            if (difference < 0)
+            {
+                return this.SaveStep(game, dto, "You should try number less than current!");
+            }
+
+            if (difference > 0)
+            {
+                return this.SaveStep(game, dto, "You should try number bigger than current!");
+            }
+
+            game.Steps.Add(dto);
+            return await this.FinishGameAsync(userId, userId);
         }
 
-        private void SetCache(Game game)
+        public Task<List<ApplicationUser>> GetPlayersListById(List<Guid> playersId)
         {
-            this.cache.Set("GuessedNumber", game.GuessedNumber, this.cacheOptions);
-            this.cache.Set("IsFinished", game.IsFinished, this.cacheOptions);
-            this.cache.Set("GameId", game.Id, this.cacheOptions);
+            return this.repository.GetPlayersListById(playersId);
         }
 
-        private bool TryGetCache<T>(string prop, out T result)
+        private bool FinishGameVote()
         {
-            return this.cache.TryGetValue(prop, out result);
+            return true;
+        }
+
+        private Guid SelectNearestToWinUser(GameDto game)
+        {
+            var closestStep = game.Steps.Aggregate((x, y) =>
+                Math.Abs(x.Value - game.GuessedNumber) <
+                Math.Abs(y.Value - game.GuessedNumber) ? x : y);
+
+            return closestStep.UserId;
+        }
+
+        private Response<GameDto> SaveStep(GameDto game, StepDto dto, string message)
+        {
+            game.Steps.Add(dto);
+            this.cache.SetValue(game);
+
+            return Response<GameDto>.Success(game);
         }
     }
 }

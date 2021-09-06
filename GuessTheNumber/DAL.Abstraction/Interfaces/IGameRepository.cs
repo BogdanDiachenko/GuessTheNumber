@@ -1,15 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core.Models;
+using Core.Models.Identity;
+using Core.Models.Responses;
 
 namespace DAL.Abstraction.Interfaces
 {
-    public interface IGameRepository : IGenericRepository<Game>
+    public interface IGameRepository
     {
-        Task AddUserToGameAsync(Guid gameId, Guid userId);
+        Task<List<ApplicationUser>> GetPlayersListById(List<Guid> playersId);
 
-        Task FinishGameAsync(Guid gameId, Guid winnerId);
-
-        Task MakeStepAsync(Step step);
+        Task AddAsync(Game game);
     }
 }

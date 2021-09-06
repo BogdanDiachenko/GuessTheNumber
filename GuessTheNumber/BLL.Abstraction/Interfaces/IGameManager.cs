@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Core.Models;
+using Core.Models.DTOs;
+using Core.Models.Responses;
 
 namespace BLL.Abstraction.Interfaces
 {
     public interface IGameManager
     {
-        Task StartGameAsync(Game newGame);
+        Response<GameDto> StartGame(GameDto dto);
 
-        Task AddUserToGameAsync(Guid userId);
+        Response<GameDto> AddUserToGame(Guid userId);
 
-        Task FinishGameAsync(Guid winnerId);
+        Task<Response<GameDto>> FinishGameAsync(Guid? winnerId, Guid userId);
 
-        Task MakeStepAsync(Step step);
+        Task<Response<GameDto>> MakeStepAsync(StepDto dto, Guid userId);
     }
 }
